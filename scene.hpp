@@ -21,6 +21,8 @@ class scene{
         double specular[3];
         vector<Light*> lights;
         vector<Shape*> shapes;
+        Camera *camera;
+        Film *film;
         
     public:
     
@@ -48,6 +50,14 @@ class scene{
 
         vector<Shape*> getShapes() { return this->shapes;} 
 
+        bool getSample(sample* pixel){
+            if(pixel->y == height){
+                return false;    
+            }
+
+            
+        }
+        
         void readFile(char* filename){
             string str, cmd;
             ifstream in;
@@ -110,8 +120,8 @@ class scene{
                     
                 }
             }
-
         }
+
 
         void Render(){
 
