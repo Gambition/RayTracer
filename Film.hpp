@@ -1,9 +1,10 @@
+#include <FreeImage.h>
 #ifndef 
 #define FILM
 
 class Film{
     private:
-        pixels;
+        pixels = vector<vector<Color>>;
     public:
         Film()
         {
@@ -15,5 +16,27 @@ class Film{
              
         }
 
+        void writeImage()
+        {
+            int bpp = 24;
+            FreeImage_Initialise();
+            FIBITMAP* img = FreeImgae_Allocate(scene->getWidth,
+                                                scene->getHeight,bpp);
+            
+            RGBQUAD value;
+            for(int j=0;j<scene->getHeight;j++)
+            {
+                vector<Color>* temp = pixels[j];
+                for(int i=0;i<scene->getWidth();i++)
+                {
+                    value.rgbRed = temp[i]->getRed;
+                    value.rgbGreen = temp[i]->getGreen;
+                    value.rgbBlue = temp[i]->getRed;
+                    FreeImage_SetPixelColor(*img,i,j,value);
+                }
+            }
+        
+            FreeImage_Save(FIF_PNG,img,"testImg".c_str(),0);
+        }
 
 };
