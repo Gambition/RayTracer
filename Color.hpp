@@ -1,5 +1,5 @@
-#ifndef 
-#define COLOR
+#ifndef COLOR_HPP
+#define COLOR_HPP
 
 class Color{
     private:
@@ -9,9 +9,9 @@ class Color{
         Color(float r,float g,float b):
             r(r),g(g),b(b){}
         
-        float getRed() {return this->r}
-        float getGreen() {return this->g}
-        float getBlue() {return this->b}
+        float getRed() {return this->r;}
+        float getGreen() {return this->g;}
+        float getBlue() {return this->b;}
 
         Color operator+(const Color& other){
             return Color(this->r + other.r,
@@ -32,5 +32,6 @@ class Color{
         }
         
         //TODO What is converstion from xyz???
+};
 
-}
+#endif
