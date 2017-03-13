@@ -17,10 +17,11 @@ class Film{
             pixels = vector< vector<Color> >(640,
                     vector<Color>(480,Color(0,0,0)));    
         }
-        /*void commit(Sample& sample,Color& color)
+        
+        void commit(Sample& sample,Color& color)
         {
-             
-        }*/
+            pixels[sample->getX()][sample->getY()] +=color;   
+        }
 
 
         void writeImage()
@@ -47,6 +48,8 @@ class Film{
             string path = "testImg.png";
             FreeImage_Save(FIF_PNG,img, path.c_str(),0);
         }
+
+        FreeImage_DeInitialise();
 
 };
 
