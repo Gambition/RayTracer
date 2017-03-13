@@ -19,8 +19,9 @@ class scene{
         vec3 cameraLookAt;
         int fovy;
         Color ambient;
-        double diffuse[3];
-        double specular[3];
+        Color diffuse;
+        Color emission;
+        double shininess;
         vector<Light*> lights;
         vector<Shape*> shapes;
         vector<vec3> vertices;
@@ -28,7 +29,7 @@ class scene{
         Camera *camera;
         Film *film;
         Raytracer* rt;
-         
+
     public:
     
         Scene(char* filename);
@@ -47,9 +48,9 @@ class scene{
         
         Color getAmbient(){ return this->ambient;}
 
-        double[] getiDiffuse(){ return this->diffuse;}
+        Color getiDiffuse(){ return this->diffuse;}
 
-        double[] getSpecular(){ return this->specular;}
+        Color getSpecular(){ return this->specular;}
 
         vector<Light*> getLights() { return this->lights;}
 
