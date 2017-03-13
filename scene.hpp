@@ -80,6 +80,8 @@ class scene{
                 stack<mat4> transfstack;
                 transfstack.push(mat(1.0));
                 
+                vector<vec3> triVertex = vector<vec3>(3);
+                int vtCount = 0;
                 int maxverts;
                 
                 getline(in,str);
@@ -203,6 +205,7 @@ class scene{
                     //----------------------------------------
                     //Below is the section for parsing objects
                     //----------------------------------------
+                    
                     //read in objects
                     else if(cmd == "Sphere"){
                         vec3 center;
@@ -214,6 +217,32 @@ class scene{
                         s>>radius;
                         shapes->push_back(new sphere(center,
                     }
+
+                    else if(cmd == "tri"){
+                        vtCount++;
+                        int values[3];
+                        
+                        for(int i=0;i<3;i++)
+                        {
+                            s>>values[i];
+                        }
+
+                        triVertex[vtCount] = vec3(values[0],values[1],values[2]);
+                        
+                        if(vtCount==2)
+                        {
+                            vec4 A = vec4(triVertex[0]);
+                            vec4 B = vec4(triVertex[1]);
+                            vec4 C = vec4(triVertex[2]);
+                            vec3 vecA = vec4(transfstack.top()*A);
+                            vec3 vecB = vec4(transfstack.top()*B);
+                            vec3 vecC = vec4(transfstack.top()*C);
+                            shapes->push_back(new triangle(
+                                vecA,vecB,vecC));
+                            vtCount=0;
+                        }
+                        
+                    }
                     
                 }
             }
@@ -221,6 +250,11 @@ class scene{
 
 
         void Render(){
-
+            while(generateSample(&sample)){
+                ray = camera->generateRay(sample);
+                color = rt->trace(ray);
+                film->commit(sample,color);
+            }
+            film->writeImage();
         }
 }
