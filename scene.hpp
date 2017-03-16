@@ -28,6 +28,7 @@ class scene{
         vector<Shape*> shapes;
         vector<vec3> vertices;
         string outputFile;
+        int maxdepth;
        
         Camera *camera;
         Film *film;
@@ -59,12 +60,16 @@ class scene{
 
         vector<Shape*> getShapes() { return this->shapes;} 
 
-        bool getSample(sample* pixel){
-            if(pixel->y == height){
-                return false;    
+        int getMaxDepth() { return this->maxdepth;}
+
+        bool generateSample(sample* pixel){
+            if(pixel->getX<=width && pixel->getY<=height){
+                return true;
+            }            
+            else{
+                return false;
             }
 
-            
         }
 
         void rightmultiply(const mat4 & M, stack<mat4> &transfstack)
@@ -96,16 +101,19 @@ class scene{
                         }
 
                     //read in the size of the image
-                    if(cmd=="size") {
+                    if( cmd=="size" ) {
                         s>> this->width;
                         s>> this->height;
                     }
 
                     //read in the output file 
-                    else if(cmd=="output"){
+                    else if( cmd=="output" ){
                         s>>outputFile;
                     }
                     
+                    else if( cmd=="maxdepth"){
+                        s>>maxdepth;
+                    }
                     //-----------------------------------------
                     //Below is the section for material properties
                     //-----------------------------------------
@@ -140,9 +148,6 @@ class scene{
                          s>>shininess;
                      }
 
-                    
-                    
-                    
                     //read in camera values
                     else if(cmd == "camera"){
                         for(int i=0;i<3;i++)
@@ -303,11 +308,22 @@ class scene{
 
 
         void Render(){
+            
+            cout<<"Start Rendering the Image......"<<endl;
+            
             while(generateSample(&sample)){
-                ray = camera->generateRay(sample);
-                color = rt->trace(ray);
+                cout<<"Generating camera ray...... ";
+                Ray ray = camera->generateRay(sample);
+                cout<<"Done!"<<endl;
+                Cout<<"Ray tracing.......";
+                Color color = rt->trace(ray,maxdepth);
+                cout<<"Done!"<<endl;
                 film->commit(sample,color);
             }
+            cout<<"Generating image......";
             film->writeImage();
+            cout<<"Done!"<<endl;
         }
-}
+};
+
+#endif

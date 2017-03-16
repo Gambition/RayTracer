@@ -2,6 +2,8 @@
 #define LIGHT
 
 #include "Color.hpp"
+#include <Math.h>
+
 class Light{
     private:
         Color color;
@@ -10,6 +12,8 @@ class Light{
         Color getColor(){
             return this->color;
         }
+        
+        double attenColor(vec3 pos){}
 };
 
 class DirecitonLight : public Light{
@@ -24,7 +28,11 @@ class DirecitonLight : public Light{
         }
 
         vec3 getPos(){ return this->position;}
-          
+        
+        //no attenuation for directional light
+        double attenColor(vec3 pos){
+            return 1;
+        }
 };
 
 class PointLight : public Light{
@@ -42,9 +50,11 @@ class PointLight : public Light{
 
         vec3 getPos(){ return this->position;}
 
-        Color attenColor(){
-            //TODO
-            //How to calculate d in attenuation????
+        double attenColor(vec3 pos){
+            double dist = glm::distance(this->position,pos);
+            double atten = attenuation[0]+attenuation[1]*dist+
+                           attenuation[2]*pow(dist,2);
+            return 1/atten;
         }
 };
 

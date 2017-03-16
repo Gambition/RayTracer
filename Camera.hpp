@@ -24,14 +24,14 @@ class camera{
             fovx = 2*atan((width/2)/z);
         }
 
-        Ray generateRay(sample pixel){
-            
+
+        Ray generateRay(sample pixel){            
             vec3 origin = scene->getCameraPos();
             int height = scene->getHeight();
             int width = scene->getWidth();
-            double tempY = (pixel.y-width/2)/(width/2);
+            double tempY = (pixel.getY()-width/2)/(width/2);
             double alpha = (tan(fovx/2))*tempY;
-            double tempX = ((height/2)-pixel->x)/(height/2);
+            double tempX = ((height/2)-pixel->getX())/(height/2);
             double beta = (tan(fovy/2))*tempX;
             vec3 direciton = alpha*(this->u)+beta*(this->v)-w;
             direction = glm::normalize(direction);

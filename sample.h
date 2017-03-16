@@ -1,7 +1,7 @@
-#ifndef 
-#define SAMPLE
+#ifndef SAMPE_HPP
+#define SAMPLE_HPP
 
-class sample{
+class Sample{
     private:
         float x,y;
     
@@ -9,4 +9,6 @@ class sample{
         float getX() {return this->x};
         float getY() {return this->y};
 
-}
+};
+
+#endif

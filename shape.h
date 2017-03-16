@@ -18,18 +18,36 @@ class Shape{
         Color getDiffuse();
         Color getSpecular();
         Color getEmission();
+
+        //calculate the color for intersection position
         Color findColor(Intersection its){
-            if(its.isHit()==0){
+            
+            if(its.isHit()==false){
                 return Color(0,0,0);
             }
         
             Color tempColor = Color(0,0,0);
             for(int i=0;i<scene->lights.size();i++)
             {
-                vec3 eyedirn = glm::normalize(scene->getCameraPos-lights[i]->getPos());
-            }
+                vec3 eyeDirn = glm::normalize(scene->getCameraPos-its->getPos());
+                vec3 lightDirn = scene->getPos();
+                vec3 half0 = glm::normalize(eyeDirn+lightDirn);
+                
+                //lambert 
+                float nDotL = dot(its->getNormal(),lightDirn);
+                Color lambert = diffuse*(lights[i]->getColor())*max(nDotL,0.0);
+                tempColor+=lambert;
+                
+                //phong
+                float nDotH = dot(its->getNormal, half0) ; 
+                vec4 phong = specular *(lights[i]->getColor()) * pow (max(nDotH, 0.0),shininess) ; 
+                tempColor+=phong;
 
-            
+                //multiply by attenuation
+                tempColor = tempColor * lights[i]->attenColor(its->getPos())
+            }
+            Color finalColor = tempColor + scene->getAmbient()+ this->emission;
+            return finalColor;
 
         }
         double getShininess();
@@ -131,3 +149,5 @@ class Triangle : public Shape{
         }
 
 };
+
+#endif
