@@ -6,7 +6,7 @@
 #include "Intersection.h"
 #include <Math.h>
 
-class shape{
+class Shape{
     private:
         Color diffuse;
         Color specular;
@@ -18,12 +18,27 @@ class shape{
         Color getDiffuse();
         Color getSpecular();
         Color getEmission();
+        Color findColor(Intersection its){
+            if(its.isHit()==0){
+                return Color(0,0,0);
+            }
+        
+            Color tempColor = Color(0,0,0);
+            for(int i=0;i<scene->lights.size();i++)
+            {
+                vec3 eyedirn = glm::normalize(scene->getCameraPos-lights[i]->getPos());
+            }
+
+            
+
+        }
         double getShininess();
         Intersection isHit(Ray r);
         
+        
 };
 
-class sphere : public shape{
+class Sphere : public Shape{
     
     private:
         vec3 center;
@@ -34,6 +49,8 @@ class sphere : public shape{
             double shininess):center(center),radius(radiud),diffuse(diffuse),
             specular(specular),emission(emission),shininess(shininess){}
 
+
+        //calculate the intersection point of ray-sphere
         Intersection isHit(Ray r){
             double b = r.getPos()*(r.getDir()-center);
             double a = r.getDir()*r.getDir();
@@ -80,7 +97,7 @@ class sphere : public shape{
 
 };
 
-class triangle : public shape{
+class Triangle : public Shape{
 
     private:
         vec3 A;
@@ -92,6 +109,7 @@ class triangle : public shape{
                 double shininess):A(a),B(b),C(c),diffuse(diffuse),
                 specular(specular),emission(emission),shininess(shiniess){}
         
+        //calculate the intersection point of ray-triangle
         Intersection isHit(Ray r){
             vec3 normal = glm::cross((C-A),(B-A));
             normal = glm::normalize(normal);
@@ -101,9 +119,9 @@ class triangle : public shape{
                 return Intersection();
             }
             vec3 position = r.getPos()+t*r.getDir();
-            if( ((glm::cross(B-A),(position-A))*normal >=0) &&
-                ((glm::cross(C-B),(position-B))*normal >=0) &&
-                ((glm::cross(A-C),(position-C))*normal >=0))
+            if( ((glm::cross((B-A),(position-A))*normal >=0) &&
+                ((glm::cross((C-B),(position-B))*normal >=0) &&
+                ((glm::cross((A-C),(position-C))*normal >=0))
             {
                     return Intersection(position,normal,this);
             }

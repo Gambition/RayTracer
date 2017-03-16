@@ -18,13 +18,16 @@ class scene{
         vec3 cameraUp;
         vec3 cameraLookAt;
         int fovy;
+        //Color attenuation;
         Color ambient;
         Color diffuse;
         Color emission;
         double shininess;
+        double attenuation[3];
         vector<Light*> lights;
         vector<Shape*> shapes;
         vector<vec3> vertices;
+        string outputFile;
        
         Camera *camera;
         Film *film;
@@ -97,6 +100,48 @@ class scene{
                         s>> this->width;
                         s>> this->height;
                     }
+
+                    //read in the output file 
+                    else if(cmd=="output"){
+                        s>>outputFile;
+                    }
+                    
+                    //-----------------------------------------
+                    //Below is the section for material properties
+                    //-----------------------------------------
+                    else if(cmd == "emission"){
+                        double values[3];
+                        for(int i=0;i<3;i++)
+                        {
+                            s>>values[i];
+                        }
+                        emission = Color(values[0],values[1],values[2]);
+                    }
+
+                    else if(cmd == "diffuse"){
+                        double values[3];
+                        for(int i=0;i<3;i++)
+                        {
+                            s>>values[i];
+                        }
+                        diffuse = Color(values[0],values[1],values[2]);
+                    }
+
+                    else if(cmd == "specular"){
+                        double values[3];
+                        for(int i=0;i<3;i++)
+                        {
+                            s>>values[i];
+                        }
+                        specualr = Color(values[0],values[1],values[2]);
+                     }
+                    
+                     else if(cmd == "shininess"){
+                         s>>shininess;
+                     }
+
+                    
+                    
                     
                     //read in camera values
                     else if(cmd == "camera"){
@@ -142,7 +187,14 @@ class scene{
                         s>>red;
                         s>>green;
                         s>>blue;
-                        ambient(red,green,blue);
+                        ambient = Color(red,green,blue);
+                    }
+
+                    //attenuation value
+                    else if(cmd == "attenuation"){
+                        for(int i=0;i<3;i++){
+                            s>>attenuation[i];
+                        }
                     }
 
                     //directional light
@@ -215,7 +267,8 @@ class scene{
                         s>>center.y;
                         s>>center.z;
                         s>>radius;
-                        shapes->push_back(new sphere(center,
+                        shapes->push_back(new Sphere(center,radius,diffuse,
+                                            specular,emission,shininess));
                     }
 
                     else if(cmd == "tri"){
@@ -237,8 +290,8 @@ class scene{
                             vec3 vecA = vec4(transfstack.top()*A);
                             vec3 vecB = vec4(transfstack.top()*B);
                             vec3 vecC = vec4(transfstack.top()*C);
-                            shapes->push_back(new triangle(
-                                vecA,vecB,vecC));
+                            shapes->push_back(new Triangle(vecA,vecB,vecC,
+                                            diffuse,specular,emission,shininess));
                             vtCount=0;
                         }
                         
