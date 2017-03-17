@@ -3,8 +3,13 @@
 
 #include <vector>
 #include <string>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
+#include "Raytracer.h"
 #include "FreeImage.h"
-#include "Color.hpp"
+
+
 using namespace std;
 class Film{
     private:
@@ -12,15 +17,14 @@ class Film{
     public:
         Film()
         {
-            /*pixels = vector<vector<Color>>(scene->getHeight,
-                    vector<Color>(scene->getWidth(),Color(0,0,0)));*/
-            pixels = vector< vector<Color> >(640,
-                    vector<Color>(480,Color(0,0,0)));    
+            pixels = vector< vector<Color> > (scene->getHeight,
+                    vector<Color>(scene->getWidth(),Color(0,0,0)));    
         }
         
         void commit(Sample& sample,Color& color)
         {
-            pixels[sample->getX()][sample->getY()] +=color;   
+            pixels[sample.getX()][sample.getY()] = 
+             pixels[sample.getX()][sample.getY()]+color;   
         }
 
 
@@ -28,9 +32,10 @@ class Film{
         {
             int bpp = 24;
             FreeImage_Initialise();
-            /*FIBITMAP* img = FreeImgae_Allocate(scene->getWidth,
-                                                scene->getHeight,bpp);*/
-            FIBITMAP* img = FreeImage_Allocate(640,480,bpp);
+
+            FIBITMAP* img = FreeImgae_Allocate(scene->getWidth,
+                                                scene->getHeight,bpp);
+
             RGBQUAD value;
             for(int j=0;j<480;j++)
             {
@@ -45,11 +50,11 @@ class Film{
                     FreeImage_SetPixelColor(img,i,j, &value);
                 }
             }
-            string ouput = path+".png";
+            string output = path+".png";
             FreeImage_Save(FIF_PNG,img, output.c_str(),0);
         }
 
-        FreeImage_DeInitialise();
+        //FreeImage_DeInitialise();
 
 };
 

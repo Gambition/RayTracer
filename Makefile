@@ -15,8 +15,14 @@ endif
   
 all : raytracer
 
-main.o : main.cpp
-	${CC} ${CFLAGS} -c main.cpp
+Transform.o: Transform.cpp Transform.h
+	${CC} ${CFLAGS} ${INCFLAGS} -c Transform.cpp
+
+Raytracer.o: Raytracer.h light.h shape.h Scene.hpp Camera.hpp  
+	${CC} ${CFLAGS} ${INCFLAGS} -c Raytracer.cpp
+
+main.o : main.cpp Raytracer.h Scene.hpp Transform.h
+	${CC} ${CFLAGS} ${INCFLAGS} -c main.cpp
 
 raytracer:  main.o
 	${CC} ${CFLAGS} main.o ${LDFLAGS} -o raytracer

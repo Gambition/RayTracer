@@ -1,8 +1,11 @@
-#include <glm/vec3.hpp>
-#include <glm/vec4.hpp>
-#include <glm/mat4*4.hpp>
-#include <glm/mat3*3.hpp>
+#ifndef TRANSFORM_HPP
+#define TRANSFORM_HPP
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <Math.h>
+const float PI = 3.14159265;
+using namespace glm;
 class Transform
 {
     public:
@@ -17,3 +20,5 @@ class Transform
     static mat4 translate(const float &tx, const float &ty, const float &tz);
     static vec3 upvector(const vec3 &up, const vec3 &zvec) ; 
 };
+
+#endif

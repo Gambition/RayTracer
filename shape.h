@@ -1,61 +1,10 @@
-#ifndef SHAPE_HPP
-#define SHAPE_HPP
 
-#include "Color.hpp"
-#include "Ray.hpp"
-#include "Intersection.h"
+
+#include "Raytracer.h"
 #include <Math.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
-class Shape{
-    private:
-        Color diffuse;
-        Color specular;
-        Color emission;
-        double shininess;
-    
-    public:
-
-        Color getDiffuse();
-        Color getSpecular();
-        Color getEmission();
-
-        //calculate the color for intersection position
-        Color findColor(Intersection its){
-            
-            if(its.isHit()==false){
-                return Color(0,0,0);
-            }
-        
-            Color tempColor = Color(0,0,0);
-            for(int i=0;i<scene->lights.size();i++)
-            {
-                vec3 eyeDirn = glm::normalize(scene->getCameraPos-its->getPos());
-                vec3 lightDirn = scene->getPos();
-                vec3 half0 = glm::normalize(eyeDirn+lightDirn);
-                
-                //lambert 
-                float nDotL = dot(its->getNormal(),lightDirn);
-                Color lambert = diffuse*(lights[i]->getColor())*max(nDotL,0.0);
-                tempColor+=lambert;
-                
-                //phong
-                float nDotH = dot(its->getNormal, half0) ; 
-                vec4 phong = specular *(lights[i]->getColor()) * pow (max(nDotH, 0.0),shininess) ; 
-                tempColor+=phong;
-
-                //multiply by attenuation
-                tempColor = tempColor * lights[i]->attenColor(its->getPos())
-            }
-            Color finalColor = tempColor + scene->getAmbient()+ this->emission;
-            return finalColor;
-
-        }
-        double getShininess();
-        Intersection isHit(Ray r);
-        vec3 getNormal(vec3 input);
-        
-        
-};
 
 class Sphere : public Shape{
     
@@ -66,8 +15,8 @@ class Sphere : public Shape{
         mat4 inverseM;
  
     public:
-        sphere(vec3 center,double radius, Color diffuse,Color specular,Color emission,
-            double shininess,mat4 m):center(center),radius(radiud),diffuse(diffuse),
+        Sphere(vec3 center,double radius, Color diffuse,Color specular,Color emission,
+            double shininess,mat4 m):center(center),radius(radius),diffuse(diffuse),
             specular(specular),emission(emission),shininess(shininess), tranformation(m)
             {
                 inverseM = glm::inverse(tranformation);
@@ -81,24 +30,26 @@ class Sphere : public Shape{
         }
         //calculate the intersection point of ray-sphere
         Intersection isHit(Ray r){
-            double b = r.getPos()*(r.getDir()-center);
-            double a = r.getDir()*r.getDir();
-            double c = (r.getPos()-center)*(r.getPos()-center)-pow(radius,2);
+            float b = r.getPos()*(r.getDir()-center);
+            float a = r.getDir()*r.getDir();
+            float c = (r.getPos()-center)*(r.getPos()-center)-pow(radius,2);
 
-            double delta = pow(b,2)-4*a*c;
-
+            float delta = pow(b,2)-4*a*c;
+            float root;
+            float root1,root2;
+            
             if(delta<0){
                 return Intersection();
             }
             else if(delta==0){
-                double root = (-b)/2*a;
+                root = (-b)/2*a;
             }
             else {
-                double root1 = (-b+sqrt(delta))/(2*a);
-                double root2 = (-b+sqrt(delta))/(2*a);
+                root1 = (-b+sqrt(delta))/(2*a);
+                root2 = (-b+sqrt(delta))/(2*a);
             }
 
-            double t;
+            float t;
             
             if(root1>0 && root2>0)
             {
@@ -119,7 +70,7 @@ class Sphere : public Shape{
                 return Intersection();
             }
 
-            vec3 postion = r.getPos()+t*r.getDir();
+            vec3 position = r.getPos()+t*r.getDir();
             position = vec3(tranformation*position);
             vec3 normal = this->getNormal(position);
 
@@ -166,4 +117,3 @@ class Triangle : public Shape{
 
 };
 
-#endif

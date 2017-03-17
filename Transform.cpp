@@ -1,10 +1,10 @@
 #include "Transform.h"
 
-
+using namespace glm;
 mat3 Transform::rotate(const float degrees, const vec3& axis) 
 {
 
-  float radian = degrees*pi/180.0;
+  float radian = degrees*s/180.0;
 
   //normalize the vector
   glm::vec3 axisNorm = glm::normalize(axis);
@@ -61,7 +61,7 @@ mat4 Transform::lookAt(const vec3 &eye, const vec3 &center, const vec3 &up)
 /*calculate perspective*/
 mat4 Transform::perspective(float fovy, float aspect, float zNear, float zFar)
 {
-  float theta = (fovy/2)*pi/180;
+  float theta = (fovy/2)*PI/180;
   float d = 1/tan(theta);
   float A = -(zFar+zNear)/(zFar-zNear);
   float B = (-2*zFar*zNear)/(zFar-zNear);

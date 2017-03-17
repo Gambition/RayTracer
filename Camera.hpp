@@ -1,11 +1,13 @@
 #ifndef CAMERA_HPP
 #define CAMERA_HPP
 
-#include "sample.h"
-#include "Ray.hpp"
+#include "Raytracer.h"
+#include "Scene.hpp"
 #include <math.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
-class camera{
+class Camera{
     private:
         vec3 w;
         vec3 u;
@@ -13,29 +15,30 @@ class camera{
         double fovx,fovy;
     
     public:
-        camera(vec3 pos,vec3 up,vec3 lookat,
-                double sceneFovy,int height,int width){
-            w = glm::normalize(pos-lookat);
-            u = glm::normalize(glm::cross(w,up));
+        Camera(){
+            w = glm::normalize(scene->getCameraPos()-scene->getCameraLookAt());
+            u = glm::normalize(glm::cross(w,scene->getCameraUp()));
             v = glm::cross(w,u);
-            fovy = sceneFovy*M_PI/180.0;
+            fovy = scene->getFovy()*M_PI/180.0;
             double z = tan(fovy/2);
-            z = (1/z)*height/2;
-            fovx = 2*atan((width/2)/z);
+            z = (1/z)*scene->getHeight()/2;
+            fovx = 2*atan((scene->getWidth()/2)/z);
+
         }
 
-
-        Ray generateRay(sample pixel){            
+        Ray generateRay(Sample pixel){            
             vec3 origin = scene->getCameraPos();
             int height = scene->getHeight();
             int width = scene->getWidth();
             double tempY = (pixel.getY()-width/2)/(width/2);
             double alpha = (tan(fovx/2))*tempY;
-            double tempX = ((height/2)-pixel->getX())/(height/2);
+            double tempX = ((height/2)-pixel.getX())/(height/2);
             double beta = (tan(fovy/2))*tempX;
-            vec3 direciton = alpha*(this->u)+beta*(this->v)-w;
+            vec3 direction = (float)alpha*(this->u)+(float)beta*(this->v)-w;
             direction = glm::normalize(direction);
             return Ray(origin,direction);
         }
 };
+
+#endif
 
