@@ -36,7 +36,18 @@ class scene{
 
     public:
     
-        Scene(char* filename);
+        Scene(){
+            shapes = vector<Shape*>;
+            lights = vector<Light*>;
+            maxdepth=5;
+            outputFile=string("testOutput.png");
+            attenuation[0] = 1.0;
+            attenuation[1] = 0;
+            attenuation[2] = 0;
+            camera  = new Camera();
+            rt = new RayTracer();
+            film = new Film();
+       }
     
         int getWidth(){ return this->width;}
         
@@ -204,12 +215,36 @@ class scene{
 
                     //directional light
                     else if(cmd == "directional"){
-                        //TODO
+                        double pos[3];
+                        float color[3];
+                        for(int i=0;i<3;i++)   {
+                            s>>pos[i];
+                        }
+                        for(int i=0;i<3;i++){
+                            s>>color[i];
+                        }
+                        vec3 position = vec3(pos[0],pos1],po[2]);
+                        position= vec3(transfstack.top()*vec4(position,0),3);
+                        Color color = Color(color[0],color[1],color[2]);
+                        DirecitonLight* dirLight = new DirecitonLight(color,position);
+                        lights->push_back(dirLight);
                     }
 
                     //point light
                     else if(cmd == "point"){
-                        //TODO
+                        double pos[3];
+                        float color[3];
+                        for(int i=0;i<3;i++)   {
+                            s>>pos[i];
+                        }
+                        for(int i=0;i<3;i++){
+                            s>>color[i];
+                        }
+                        vec3 position = vec3(pos[0],pos[1],pos[2]);
+                        position = vec3(transfstack.top()*vec4(position,1));
+                        Color color = Color(color[0],color[1],color[2]);
+                        PointLight pLight = new PointLight(color,position,attenuation);
+                        lights->push_back(pLight);
                     }
                     
                     //--------------------------------------------------
@@ -273,7 +308,7 @@ class scene{
                         s>>center.z;
                         s>>radius;
                         shapes->push_back(new Sphere(center,radius,diffuse,
-                                            specular,emission,shininess));
+                                            specular,emission,shininess,transfstack.top());
                     }
 
                     else if(cmd == "tri"){

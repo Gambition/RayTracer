@@ -24,7 +24,7 @@ class Film{
         }
 
 
-        void writeImage()
+        void writeImage(string path)
         {
             int bpp = 24;
             FreeImage_Initialise();
@@ -45,8 +45,8 @@ class Film{
                     FreeImage_SetPixelColor(img,i,j, &value);
                 }
             }
-            string path = "testImg.png";
-            FreeImage_Save(FIF_PNG,img, path.c_str(),0);
+            string ouput = path+".png";
+            FreeImage_Save(FIF_PNG,img, output.c_str(),0);
         }
 
         FreeImage_DeInitialise();

@@ -8,6 +8,7 @@ class RayTracer
 {
     public:
      RayTracer() { }
-     Color trace(Ray r, int depth);
-
+     Color trace(Ray r, int depth){}
 };
+
+#endif

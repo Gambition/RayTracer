@@ -1,12 +1,10 @@
-#include "Film.hpp"
 #include <stdlib.h>
 #include <stdio.h>
+#include "Scene.hpp"
 
 int main(int argc, char*argv[])
 {
-    Film* film = new Film();
-    film->writeImage();
-    /*Scene* scene= new Scene(argv[1]);
-    scene->readFile();
-    scene->render();*/
+    Scene* myScene = new Scene();
+    Scene->readFile(argv[1]);
+    Scene->Render();
 }

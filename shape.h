@@ -52,6 +52,7 @@ class Shape{
         }
         double getShininess();
         Intersection isHit(Ray r);
+        vec3 getNormal(vec3 input);
         
         
 };
@@ -61,13 +62,23 @@ class Sphere : public Shape{
     private:
         vec3 center;
         double radius;
+        mat4 tranformation;
+        mat4 inverseM;
  
     public:
         sphere(vec3 center,double radius, Color diffuse,Color specular,Color emission,
-            double shininess):center(center),radius(radiud),diffuse(diffuse),
-            specular(specular),emission(emission),shininess(shininess){}
+            double shininess,mat4 m):center(center),radius(radiud),diffuse(diffuse),
+            specular(specular),emission(emission),shininess(shininess), tranformation(m)
+            {
+                inverseM = glm::inverse(tranformation);
+            }
 
+        vec3 getNormal(vec3 input){
+            vec3 normal = vec3(inverse*position)-this->center;
+            normal = vec3(glm::transpose(inverseM)*(vec4(normal,0)),3);
+            normal = glm::normalize(normal);
 
+        }
         //calculate the intersection point of ray-sphere
         Intersection isHit(Ray r){
             double b = r.getPos()*(r.getDir()-center);
@@ -88,6 +99,7 @@ class Sphere : public Shape{
             }
 
             double t;
+            
             if(root1>0 && root2>0)
             {
                 if(root1<=root2){
@@ -108,7 +120,8 @@ class Sphere : public Shape{
             }
 
             vec3 postion = r.getPos()+t*r.getDir();
-            vec3 normal
+            position = vec3(tranformation*position);
+            vec3 normal = this->getNormal(position);
 
             return Intersection(position,normal,this);
         }
@@ -128,8 +141,11 @@ class Triangle : public Shape{
                 specular(specular),emission(emission),shininess(shiniess){}
         
         //calculate the intersection point of ray-triangle
+        vec3 getNormal(vec3 input){
+            return glm::normalize(glm::cross((C-A),(B-A)));
+        }
         Intersection isHit(Ray r){
-            vec3 normal = glm::cross((C-A),(B-A));
+            vec3 normal = glm::cross((C-A),(B-A);
             normal = glm::normalize(normal);
             double t = (normal*(A-r.getPos()))/(normal*r.getDir());
 
