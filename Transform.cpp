@@ -4,7 +4,7 @@ using namespace glm;
 mat3 Transform::rotate(const float degrees, const vec3& axis) 
 {
 
-  float radian = degrees*s/180.0;
+  float radian = degrees*PI/180.0;
 
   //normalize the vector
   glm::vec3 axisNorm = glm::normalize(axis);

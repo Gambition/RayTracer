@@ -3,26 +3,62 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include "Scene.hpp"
+#include <vector>
+#include <stack>
+#include <iostream>
+#include <string>
+#include <fstream>
+#include <sstream>
+#include "Transform.h"
+#include <Math.h>
 
+using namespace std;
 using namespace glm;
 class Sample;
-class Color;
-class Light;
-class Shape;
-class Intersection;
 class Ray;
+class Scene;
+class Shape;
+
+class Camera;
+class Color;
+class Film;
 class RayTracer;
+class Intersect;
+
 
 extern Scene* scene;
 
 class Sample{
     private:
-        float x,y;
+        int xPos,yPos;
     
     public:
-        float getX() {return this->x;}
-        float getY() {return this->y;}
+        Sample(int x,int y){
+            xPos = x;
+            yPos = y;
+        }
+        int getX() {return this->xPos;}
+        int getY() {return this->yPos;}
+
+};
+
+class Intersection{
+    
+    private:
+        vec3 position;
+        vec3 normal;
+        Shape* shape;
+        bool hit;
+
+    public:
+        Intersection(): position(vec3(0,0,0)),normal(vec3(0,0,0)),hit(false){}
+        Intersection(vec3 pos,vec3 normal, Shape *shape):
+            position(pos),normal(normal),shape(shape),hit(true){}
+
+        vec3 getPos() {return position;}
+        vec3 getNormal() {return normal;}
+        Shape* getShape() {return shape;}
+        bool isHit() {return hit;} 
 
 };
 
@@ -54,6 +90,12 @@ class Color{
                          this->g - other.g,
                          this->b - other.b);
         }
+    
+        Color operator*(const Color &other) const{
+            return Color(this->r * other.r,
+                         this->g * other.g,
+                         this->b * other.b);
+        }
 
         Color operator*(double scale){
             return Color(this->r * scale,
@@ -65,7 +107,7 @@ class Color{
 };
 
 class Light{
-    private:
+    protected:
         Color color;
     
     public:
@@ -76,80 +118,14 @@ class Light{
         Color getColor(){
             return this->color;
         }
-    
-        virtual double attenColor(vec3 pos){}
-};
-
-class Shape{
-    private:
-        Color diffuse;
-        Color specular;
-        Color emission;
-        double shininess;
-    
-    public:
-        Shape(){}
-        Color getDiffuse() {return diffuse;}
-        Color getSpecular() {return specular;}
-        Color getEmission() {return emission;}
-        double getShininess() {return shininess;}
-
-        //calculate the color for intersection position
-        Color findColor(Intersection its){
-            
-            if(its.isHit()==false){
-                return Color(0,0,0);
-            }
         
-            Color tempColor = Color(0,0,0);
-            for(int i=0;i<scene->lights.size();i++)
-            {
-                vec3 eyeDirn = glm::normalize(scene->getCameraPos-its->getPos());
-                vec3 lightDirn = scene->getPos();
-                vec3 half0 = glm::normalize(eyeDirn+lightDirn);
-                
-                //lambert 
-                float nDotL = dot(its.getNormal(),lightDirn);
-                Color lambert = diffuse*(scene->lights[i]->getColor())*max(nDotL,0.0);
-                tempColor = tempColor+lambert;
-                
-                //phong
-                float nDotH = dot(its.getNormal(), half0) ; 
-                Color phong = specular *(scene->lights[i]->getColor()) * pow (max(nDotH, 0.0),shininess) ; 
-                tempColor = tempColor+phong;
-
-                //multiply by attenuation
-                tempColor = tempColor * scene->lights[i]->attenColor(its.getPos())
-            }
-            Color finalColor = tempColor + scene->getAmbient()+ this->emission;
-            return finalColor;
-
+        virtual vec3 getPos(){
+            return vec3(0,0,0);
         }
-
-        virtual Intersection isHit(Ray r);
-        virtual vec3 getNormal(vec3 input);
-        
-        
-};
-
-class Intersection{
+        virtual double attenColor(vec3 pos){
+            return (double)1;
+        };
     
-    private:
-        vec3 position;
-        vec3 normal;
-        Shape* shape;
-        bool hit;
-
-    public:
-        Intersection(): position(vec3(0,0,0)),normal(vec3(0,0,0)),hit(false){}
-        Intersection(vec3 postion,vec3 normal, Shape *shape):
-            position(position),normal(normal),shape(shape),hit(true){}
-
-        vec3 getPos() {return position;}
-        vec3 getNormal() {return normal;}
-        Shape* getShape() {return shape;}
-        bool isHit() {return hit;} 
-
 };
 
 class Ray{
@@ -174,11 +150,132 @@ class Ray{
         }
 };
 
+class Shape{
+    protected:
+        Color diffuse;
+        Color specular;
+        Color emission;
+        double shininess;
+    
+    public:
+        Shape(){}
+        Color getDiffuse() {return diffuse;}
+        Color getSpecular() {return specular;}
+        Color getEmission() {return emission;}
+        double getShininess() {return shininess;}
+
+        //calculate the color for intersection position
+        Color findColor(Intersection its);
+        
+        virtual Intersection isHit(Ray r)
+        {
+            return Intersection();
+        };
+        virtual vec3 getNormal(vec3 input)
+        {
+            return vec3(0,0,0);
+        };
+        
+        
+};
+
+
+
+class Scene
+{
+    private:
+        int width, height;
+        vec3 cameraPos;
+        vec3 cameraUp;
+        vec3 cameraLookAt;
+        int fovy;
+        //Color attenuation;
+        Color ambient;
+        Color diffuse;
+        Color emission;
+        Color specular;
+        double shininess;
+        double attenuation[3];
+        vector<vec3> vertices;
+        string outputFile;
+        int maxdepth;
+       
+        Camera *camera;
+        Film *film;
+        RayTracer* rt;
+
+    public:
+        vector<Light*> lights;
+        
+        vector<Shape*> shapes;
+        
+        Scene();
+    
+        int getWidth(){ return this->width;}
+        
+        int getHeight(){ return this->height;}
+
+        int getFovy(){ return this->fovy; }
+       
+        vec3 getCameraPos(){ return this->cameraPos;}
+
+        vec3 getCameraUp(){ return this->cameraUp;}
+
+        vec3 getCameraLookAt(){ return this->cameraLookAt;}
+        
+        Color getAmbient(){ return this->ambient;}
+
+        Color getiDiffuse(){ return this->diffuse;}
+
+        Color getSpecular(){ return this->specular;}
+
+        vector<Shape*> getShapes() { return this->shapes;} 
+
+        int getMaxDepth() { return this->maxdepth;}
+
+        bool generateSample(Sample* pixel);
+
+        void rightmultiply(const mat4 & M, stack<mat4> &transfstack);
+        
+        void readFile(char* filename);
+
+        void init();
+
+        void Render();
+};
+
+class Camera{
+    private:
+        vec3 w;
+        vec3 u;
+        vec3 v;
+        double fovx,fovy;
+    
+    public:
+        Camera();
+
+        Ray generateRay(Sample pixel);
+};
+
+class Film{
+    private:
+        std::vector< vector<Color> > pixels;
+    public:
+        Film();
+        
+        void commit(Sample& sample,Color& color);
+
+        void writeImage(string path);
+
+};
+
+
+
 class RayTracer
 {
      public:
-     RayTracer() { }
-     Color trace(Ray r, int depth){}
+     RayTracer(){}
+     Color trace(Ray r, int depth);
 };
 
 #endif

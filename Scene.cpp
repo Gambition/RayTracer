@@ -1,9 +1,7 @@
-#ifndef SCENE_HPP
-#define SCENE_HPP
 
-#include "Camera.hpp"
-#include "Film.hpp"
 #include "Raytracer.h"
+#include "shape.h"
+#include "light.h"
 #include <vector>
 #include <stack>
 #include <iostream>
@@ -14,33 +12,9 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 using namespace std;
-class Scene{
-    private:
-        int width, height;
-        vec3 cameraPos;
-        vec3 cameraUp;
-        vec3 cameraLookAt;
-        int fovy;
-        //Color attenuation;
-        Color ambient;
-        Color diffuse;
-        Color emission;
-        Color specular;
-        double shininess;
-        double attenuation[3];
-        vector<Light*> lights;
-        vector<Shape*> shapes;
-        vector<vec3> vertices;
-        string outputFile;
-        int maxdepth;
-       
-        Camera *camera;
-        Film *film;
-        RayTracer* rt;
+using namespace glm;
 
-    public:
-    
-        Scene(){
+        Scene::Scene(){
             shapes = vector<Shape*>();
             lights = vector<Light*>();
             maxdepth=5;
@@ -48,37 +22,11 @@ class Scene{
             attenuation[0] = 1.0;
             attenuation[1] = 0;
             attenuation[2] = 0;
-            camera  = new Camera();
-            rt = new RayTracer();
-            film = new Film();
        }
-    
-        int getWidth(){ return this->width;}
-        
-        int getHeight(){ return this->height;}
 
-        int getFovy(){ return this->fovy; }
-       
-        vec3 getCameraPos(){ return this->cameraPos;}
 
-        vec3 getCameraUp(){ return this->cameraUp;}
-
-        vec3 getCameraLookAt(){ return this->cameraLookAt;}
-        
-        Color getAmbient(){ return this->ambient;}
-
-        Color getiDiffuse(){ return this->diffuse;}
-
-        Color getSpecular(){ return this->specular;}
-
-        vector<Light*> getLights() { return this->lights;}
-
-        vector<Shape*> getShapes() { return this->shapes;} 
-
-        int getMaxDepth() { return this->maxdepth;}
-
-        bool generateSample(Sample* pixel){
-            if(pixel->getX()<=width && pixel->getY<()=height){
+       bool Scene::generateSample(Sample* pixel){
+            if(pixel->getX()<=width && pixel->getY()<=height){
                 return true;
             }            
             else{
@@ -87,13 +35,19 @@ class Scene{
 
         }
 
-        void rightmultiply(const mat4 & M, stack<mat4> &transfstack)
+        void Scene::init(){
+            camera = new Camera();
+            rt = new RayTracer();
+            film = new Film();
+        }
+
+        void Scene::rightmultiply(const mat4 & M, stack<mat4> &transfstack)
         {
             mat4 &T = transfstack.top();
             T = T * M;
         }
         
-        void readFile(char* filename){
+       void Scene::readFile(char* filename){
             string str, cmd;
             ifstream in;
             in.open(filename);
@@ -109,6 +63,7 @@ class Scene{
                 
                 getline(in,str);
                 while(in){
+
                     if((str.find_first_not_of("\t\r\n")!=string::npos)&&(str[0]!='#')){
                         stringstream s(str);
                         s>>cmd;
@@ -224,10 +179,10 @@ class Scene{
                                 s>>pos[i];
                             }
                             for(int i=0;i<3;i++){
-                                s>>color[i];
+                                s>>colors[i];
                             }
                             vec3 position = vec3(pos[0],pos[1],pos[2]);
-                            position= vec3(transfstack.top()*vec4(position,0),3);
+                            position= vec3(transfstack.top()*vec4(position,0));
                             Color color = Color(colors[0],colors[1],colors[2]);
                             DirectionLight* dirLight = new DirectionLight(color,position);
                             lights.push_back(dirLight);
@@ -236,17 +191,17 @@ class Scene{
                         //point light
                         else if(cmd == "point"){
                             double pos[3];
-                            float color[3];
+                            float colors[3];
                             for(int i=0;i<3;i++)   {
                                 s>>pos[i];
                             }
                             for(int i=0;i<3;i++){
-                                s>>color[i];
+                                s>>colors[i];
                             }
                             vec3 position = vec3(pos[0],pos[1],pos[2]);
                             position = vec3(transfstack.top()*vec4(position,1));
-                            Color color = Color(color[0],color[1],color[2]);
-                            PointLight pLight = new PointLight(color,position,attenuation);
+                            Color color = Color(colors[0],colors[1],colors[2]);
+                            PointLight* pLight = new PointLight(color,position,attenuation);
                             lights.push_back(pLight);
                         }
                     
@@ -256,7 +211,7 @@ class Scene{
                    
                         //read in transaltion value
                         else if(cmd == "translate") {
-                            double[] values;
+                            double values[3];
                             for(int i=0;i<3;i++){
                                 s>>values[i];
                             }
@@ -267,19 +222,19 @@ class Scene{
                     
                         //read in scaling value
                         else if(cmd == "scale") {
-                            double[] values;
+                            double values[3];
                             for(int i=0;i<3;i++){
                                 s>>values[i];
                             }
 
                             mat4 tmat = Transform::scale(values[0],
                                     values[1],values[2]);
-                            rightmultipy(tmat,transfstack);
+                            rightmultiply(tmat,transfstack);
                         }
 
                         //read in rotation value
                         else if(cmd == "rotate") {
-                            double[] values;
+                            double values[4];
                             for(int i=0;i<4;i++){
                                 s>>values[i];
                             }
@@ -290,7 +245,7 @@ class Scene{
                         }
                 
                         else if(cmd == "pushTransform"){
-                            transfstack.push(tranfstack.top());
+                            transfstack.push(transfstack.top());
                         }
                         else if(cmd == "popTransform"){
                             transfstack.pop();
@@ -302,7 +257,7 @@ class Scene{
                     //----------------------------------------
                     
                         //read in objects
-                        else if(cmd == "Sphere"){
+                        else if(cmd == "sphere"){
                             vec3 center;
                             double radius;
                             //read in the center vector
@@ -310,8 +265,8 @@ class Scene{
                             s>>center.y;
                             s>>center.z;
                             s>>radius;
-                            shapes->push_back(new Sphere(center,radius,diffuse,
-                                            specular,emission,shininess,transfstack.top());
+                            shapes.push_back(new Sphere(center,radius,diffuse,
+                                            specular,emission,shininess,transfstack.top()));
                         }
 
                         else if(cmd == "tri"){
@@ -327,40 +282,61 @@ class Scene{
                         
                             if(vtCount==2)
                             {
-                                vec4 A = vec4(triVertex[0]);
-                                vec4 B = vec4(triVertex[1]);
-                                vec4 C = vec4(triVertex[2]);
-                                vec3 vecA = vec4(transfstack.top()*A);
-                                vec3 vecB = vec4(transfstack.top()*B);
-                                vec3 vecC = vec4(transfstack.top()*C);
-                                shapes->push_back(new Triangle(vecA,vecB,vecC,
+                                vec4 A = vec4(triVertex[0],0);
+                                vec4 B = vec4(triVertex[1],0);
+                                vec4 C = vec4(triVertex[2],0);
+                                vec3 vecA = vec3(transfstack.top()*A);
+                                vec3 vecB = vec3(transfstack.top()*B);
+                                vec3 vecC = vec3(transfstack.top()*C);
+                                shapes.push_back(new Triangle(vecA,vecB,vecC,
                                             diffuse,specular,emission,shininess));
                                 vtCount=0;
                             }
                         }
+                        else{
+                            cerr <<"Unknown Command: "<<cmd<< " Skipping \n";
+                        }
                     }
+                    getline(in,str);
                 }
             }
         }
 
 
-        void Render(){
+        void Scene::Render(){
             
-            cout<<"Start Rendering the Image......"<<endl;
-            
+            //cout<<"Start Rendering the Image......"<<endl;
+            for(int i=0;i<scene->getHeight();i++)
+            {
+                for(int j=0;j<scene->getWidth();j++)
+                {
+                    Sample sample = Sample(i,j);
+               
+                    //cout<<"Generating camera ray...... ";
+                    Ray ray = camera->generateRay(sample);
+                    vec3 fuck = ray.getDir();
+                    cout<<fuck.x<<" ";
+                    cout<<fuck.y<<" ";
+                    cout<<fuck.z<<endl;
+                    //cout<<"Done!"<<endl;*/
+                    //cout<<"Ray tracing.......";
+                    Color color = rt->trace(ray,maxdepth);
+                    //cout<<"Done!"<<endl;
+                    film->commit(sample,color);
+                }
+            }
+
+            /*
             while(generateSample(&sample)){
                 cout<<"Generating camera ray...... ";
-                Ray ray = camera->generateRay(sample);
+                ray = camera->generateRay(sample,this);
                 cout<<"Done!"<<endl;
-                Cout<<"Ray tracing.......";
-                Color color = rt->trace(ray,maxdepth);
+                cout<<"Ray tracing.......";
+                color = rt->trace(ray,maxdepth,this);
                 cout<<"Done!"<<endl;
                 film->commit(sample,color);
-            }
+            }*/
             cout<<"Generating image......";
-            film->writeImage();
+            film->writeImage(outputFile);
             cout<<"Done!"<<endl;
         }
-};
-
-#endif

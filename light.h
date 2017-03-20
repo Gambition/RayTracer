@@ -1,5 +1,4 @@
 
-#include "Color.hpp"
 #include "Raytracer.h"
 #include <Math.h>
 #include <glm/glm.hpp>
@@ -17,12 +16,13 @@ class DirectionLight : public Light{
             position = pos;
         }
 
-        vec3 getPos(){ return this->position;}
+        virtual vec3 getPos(){ return this->position;}
         
         //no attenuation for directional light
-        double attenColor(vec3 pos){
+        virtual double attenColor(vec3 pos){
             return 1;
         }
+
 };
 
 class PointLight : public Light{
@@ -38,9 +38,9 @@ class PointLight : public Light{
             attenuation = atten;
         }
 
-        vec3 getPos(){ return this->position;}
+        virtual vec3 getPos(){ return this->position;}
 
-        double attenColor(vec3 pos){
+        virtual double attenColor(vec3 pos){
             double dist = glm::distance(this->position,pos);
             double atten = attenuation[0]+attenuation[1]*dist+
                            attenuation[2]*pow(dist,2);

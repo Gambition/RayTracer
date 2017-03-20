@@ -15,16 +15,26 @@ endif
   
 all : raytracer
 
-Transform.o: Transform.cpp Transform.h
-	${CC} ${CFLAGS} ${INCFLAGS} -c Transform.cpp
+Transform.o: Transform.h
+	${CC} ${CFLAGS}  ${INCFLAGS} -c Transform.cpp
 
-Raytracer.o: Raytracer.h light.h shape.h Scene.hpp Camera.hpp  
+Camera.o : Camera.cpp Raytracer.h
+	${CC} ${CFLAGS} ${INCFLAGS} -c Camera.cpp
+
+Film.o : Film.cpp Raytracer.h
+	${CC} ${CFLAGS} ${INCFLAGS} -c Film.cpp
+
+Scene.o : Scene.cpp Raytracer.h shape.h light.h
+	${CC} ${CFLAGS} ${INCFLAGS} -c Scene.cpp
+
+Raytracer.o : Raytracer.cpp Raytracer.h
 	${CC} ${CFLAGS} ${INCFLAGS} -c Raytracer.cpp
 
-main.o : main.cpp Raytracer.h Scene.hpp Transform.h
+main.o : main.cpp raytracer.h
 	${CC} ${CFLAGS} ${INCFLAGS} -c main.cpp
 
-raytracer:  main.o
-	${CC} ${CFLAGS} main.o ${LDFLAGS} -o raytracer
+raytracer : main.o Transform.o Camera.o Film.o Scene.o Raytracer.o
+	${CC} ${CFLAGS} ${INCFLAGS} main.o Transform.o Camera.o Film.o Scene.o Raytracer.o ${LDFLAGS} -o raytracer
+
 clean:
 	  rm -rf *o *~ raytracer
