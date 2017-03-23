@@ -48,6 +48,10 @@ using namespace glm;
         }
         
        void Scene::readFile(char* filename){
+            ambient = Color(0,0,0);
+            diffuse = Color(0,0,0);
+            emission = Color(0,0,0);
+            specular = Color(0,0,0);
             string str, cmd;
             ifstream in;
             in.open(filename);
@@ -56,11 +60,8 @@ using namespace glm;
                 //set up the transforamtion stack
                 stack<mat4> transfstack;
                 transfstack.push(mat4(1.0));
-                
-                vector<vec3> triVertex = vector<vec3>(3);
-                int vtCount = 0;
                 int maxverts;
-                
+                int vertxCount = 0;
                 getline(in,str);
                 while(in){
 
@@ -103,6 +104,15 @@ using namespace glm;
                             }
                             diffuse = Color(values[0],values[1],values[2]);
                         }
+                                                //ambient value
+                        else if(cmd == "ambient"){
+                            double values[3];
+                            for(int i=0;i<3;i++)
+                            {
+                                s>>values[i];
+                            }
+                            ambient = Color(values[0],values[1],values[2]);
+                        }
 
                         else if(cmd == "specular"){
                             double values[3];
@@ -122,21 +132,28 @@ using namespace glm;
                             for(int i=0;i<3;i++)
                             {
                                 s>>cameraPos[i];
+                           
+                            }
+                            
+                            for(int i=0;i<3;i++)
+                            {
+                                s>>cameraLookAt[i];
+                   
                             }
                             for(int i=0;i<3;i++)
                             {
                                 s>>cameraUp[i];
+                   
                             }
-                            for(int i=0;i<3;i++)
-                            {
-                                s>>cameraLookAt[i];
-                            }
+                      
                             s>>this->fovy;
+
                         }
 
                         //maxverts
                         else if(cmd == "maxverts"){
                             s>>maxverts;
+                       
                             vertices = vector<vec3>(maxverts);
                         }
 
@@ -147,7 +164,9 @@ using namespace glm;
                                 s>>values[i];
                             }
                             vec3 newVertex = vec3(values[0],values[1],values[2]);
-                            vertices.push_back(newVertex);
+        
+                            vertices[vertxCount] = newVertex;
+                            vertxCount++;
                         }
 
 
@@ -155,14 +174,7 @@ using namespace glm;
                     //Below is the section for light properties
                     //-----------------------------------------
                     
-                        //ambient value
-                        else if(cmd == "ambient"){
-                            int red,green,blue;
-                            s>>red;
-                            s>>green;
-                            s>>blue;
-                            ambient = Color(red,green,blue);
-                        }
+
 
                         //attenuation value
                         else if(cmd == "attenuation"){
@@ -183,6 +195,7 @@ using namespace glm;
                             }
                             vec3 position = vec3(pos[0],pos[1],pos[2]);
                             position= vec3(transfstack.top()*vec4(position,0));
+                            
                             Color color = Color(colors[0],colors[1],colors[2]);
                             DirectionLight* dirLight = new DirectionLight(color,position);
                             lights.push_back(dirLight);
@@ -200,6 +213,7 @@ using namespace glm;
                             }
                             vec3 position = vec3(pos[0],pos[1],pos[2]);
                             position = vec3(transfstack.top()*vec4(position,1));
+            
                             Color color = Color(colors[0],colors[1],colors[2]);
                             PointLight* pLight = new PointLight(color,position,attenuation);
                             lights.push_back(pLight);
@@ -265,33 +279,25 @@ using namespace glm;
                             s>>center.y;
                             s>>center.z;
                             s>>radius;
-                            shapes.push_back(new Sphere(center,radius,diffuse,
+                            shapes.push_back(new Sphere(center,radius,diffuse,ambient,
                                             specular,emission,shininess,transfstack.top()));
                         }
 
                         else if(cmd == "tri"){
-                            vtCount++;
                             int values[3];
-                        
-                            for(int i=0;i<3;i++)
-                            {
+                            for(int i=0;i<3;i++){
                                 s>>values[i];
                             }
-
-                            triVertex[vtCount] = vec3(values[0],values[1],values[2]);
-                        
-                            if(vtCount==2)
-                            {
-                                vec4 A = vec4(triVertex[0],0);
-                                vec4 B = vec4(triVertex[1],0);
-                                vec4 C = vec4(triVertex[2],0);
-                                vec3 vecA = vec3(transfstack.top()*A);
-                                vec3 vecB = vec3(transfstack.top()*B);
-                                vec3 vecC = vec3(transfstack.top()*C);
-                                shapes.push_back(new Triangle(vecA,vecB,vecC,
-                                            diffuse,specular,emission,shininess));
-                                vtCount=0;
-                            }
+            
+                            vec4 temp0 = vec4(vertices[values[0]],1);
+                            vec4 temp1 = vec4(vertices[values[1]],1);
+                            vec4 temp2 = vec4(vertices[values[2]],1);
+                            vec3 vert0 = vec3(transfstack.top()*temp0);
+                            vec3 vert1 = vec3(transfstack.top()*temp1);
+                            vec3 vert2 = vec3(transfstack.top()*temp2);
+                            
+                            shapes.push_back(new Triangle(vert0,vert1,vert2,diffuse,ambient,
+                                            specular,emission,shininess));
                         }
                         else{
                             cerr <<"Unknown Command: "<<cmd<< " Skipping \n";
@@ -306,36 +312,24 @@ using namespace glm;
         void Scene::Render(){
             
             //cout<<"Start Rendering the Image......"<<endl;
+            
             for(int i=0;i<scene->getHeight();i++)
             {
                 for(int j=0;j<scene->getWidth();j++)
                 {
                     Sample sample = Sample(i,j);
-               
+          
                     //cout<<"Generating camera ray...... ";
                     Ray ray = camera->generateRay(sample);
-                    vec3 fuck = ray.getDir();
-                    cout<<fuck.x<<" ";
-                    cout<<fuck.y<<" ";
-                    cout<<fuck.z<<endl;
-                    //cout<<"Done!"<<endl;*/
-                    //cout<<"Ray tracing.......";
+                  
+                    
                     Color color = rt->trace(ray,maxdepth);
+                    //cout<<color.getRed()<<color.getGreen()<<color.getBlue()<<endl;
                     //cout<<"Done!"<<endl;
                     film->commit(sample,color);
                 }
             }
 
-            /*
-            while(generateSample(&sample)){
-                cout<<"Generating camera ray...... ";
-                ray = camera->generateRay(sample,this);
-                cout<<"Done!"<<endl;
-                cout<<"Ray tracing.......";
-                color = rt->trace(ray,maxdepth,this);
-                cout<<"Done!"<<endl;
-                film->commit(sample,color);
-            }*/
             cout<<"Generating image......";
             film->writeImage(outputFile);
             cout<<"Done!"<<endl;

@@ -64,7 +64,7 @@ class Intersection{
 
 class Color{
     private:
-        float r,g,b;
+        double r,g,b;
     
     public:
         Color(){
@@ -72,12 +72,12 @@ class Color{
             g=0.0;
             b=0.0;
         }
-        Color(float r,float g,float b):
+        Color(double r,double g,double b):
             r(r),g(g),b(b){}
         
-        float getRed() {return this->r;}
-        float getGreen() {return this->g;}
-        float getBlue() {return this->b;}
+        double getRed() {return this->r;}
+        double getGreen() {return this->g;}
+        double getBlue() {return this->b;}
 
         Color operator+(const Color& other){
             return Color(this->r + other.r,
@@ -119,6 +119,15 @@ class Light{
             return this->color;
         }
         
+        virtual float incidentShade(vec3 i, vec3 normal){
+            return 0;
+        }
+        virtual bool blocked(vec3 input){
+            return false;
+        }
+        virtual vec3 calculateDirn(vec3 mypos){
+            return vec3(0,0,0);
+        }
         virtual vec3 getPos(){
             return vec3(0,0,0);
         }
@@ -148,10 +157,18 @@ class Ray{
         vec3 getDir(){
             return this->direction;
         }
+
+        Ray transform(const mat4 m){
+            vec3 p,d;
+            p = vec3(m*vec4(position,1));
+            d = glm::normalize(vec3(m*vec4(direction,0)));
+            return Ray(p,d);
+        }
 };
 
 class Shape{
     protected:
+        Color ambient;
         Color diffuse;
         Color specular;
         Color emission;
@@ -159,6 +176,7 @@ class Shape{
     
     public:
         Shape(){}
+        Color getAmbient() {return ambient;}
         Color getDiffuse() {return diffuse;}
         Color getSpecular() {return specular;}
         Color getEmission() {return emission;}
@@ -229,7 +247,7 @@ class Scene
 
         Color getSpecular(){ return this->specular;}
 
-        vector<Shape*> getShapes() { return this->shapes;} 
+        RayTracer* getRayTracer(){return this->rt;}
 
         int getMaxDepth() { return this->maxdepth;}
 
@@ -269,13 +287,12 @@ class Film{
 
 };
 
-
-
 class RayTracer
 {
      public:
      RayTracer(){}
      Color trace(Ray r, int depth);
+     float closestHit(Ray r);
 };
 
 #endif

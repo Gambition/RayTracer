@@ -11,6 +11,7 @@
         
         void Film::commit(Sample& sample,Color& color)
         {
+           
             pixels[sample.getX()][sample.getY()] = 
              pixels[sample.getX()][sample.getY()]+color;   
         }
@@ -30,10 +31,10 @@
                 vector<Color> temp = pixels[j];
                 for(int i=0;i<640;i++)
                 {
-                    //value.rgbRed = temp[i].getRed();
-                    value.rgbRed = temp[i].getBlue();
-                    value.rgbGreen = temp[i].getGreen();
-                    value.rgbBlue = temp[i].getRed();
+ 
+                    value.rgbRed = temp[i].getBlue()*255;
+                    value.rgbGreen = temp[i].getGreen()*255;
+                    value.rgbBlue = temp[i].getRed()*255;
                   
                     FreeImage_SetPixelColor(img,i,j, &value);
                 }
